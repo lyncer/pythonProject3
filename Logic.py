@@ -57,5 +57,6 @@ class Table:
             model.setCellWidget(num,2,reborn_combox3())
 
         print(model.cellWidget(0,1).currentText())
+        print('shit1')
 
         return table_layout
