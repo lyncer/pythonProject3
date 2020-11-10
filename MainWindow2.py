@@ -17,6 +17,9 @@ from PyQt5.QtCore import Qt
 
 
 class Ui_MainWindow(object):
+    def __init__(self):
+        super(Ui_MainWindow, self).__init__()
+        self.setupUi(Main_Window)
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -111,6 +114,6 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     Main_Window = QtWidgets.QMainWindow()
     Ui = Ui_MainWindow()
-    Ui.setupUi(Main_Window)
+    # Ui.setupUi(Main_Window)
     Main_Window.show()
     sys.exit(app.exec_())
