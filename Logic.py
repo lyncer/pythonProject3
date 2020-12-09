@@ -7,11 +7,10 @@ import dataset
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数','实装重车','调妥时间',
                                          '封堵开始','封堵结束', '装车开始', '装车完毕','平车开始', '平车结束', '挂车时间', '备注']
 
-
-today = datetime.today()
+Today = datetime.today()
 # 定义today 为“2020.xx.xx”格式的字符串
-today = '.'.join(map(str, [today.year, today.month, today.day]))
-
+today = '.'.join(map(str, [Today.year, Today.month, Today.day]))
+tomorrow = '.'.join(map(str, [Today.year, Today.month, Today.day+1]))
 
 
 class Table:
@@ -47,16 +46,43 @@ class Table:
             print('当前表格列表：',database.tables())
             database.close()
 
-
-
-    #点击保存按钮，将数据更新至数据库
-
     @staticmethod
-    def save_table(table_model):
-        pass
+    def read_table(table_model):
+        database = QSqlDatabase.addDatabase('QSQLITE')
+        database.setDatabaseName('test.db')
+        if not database.open():
+            print('数据库建立失败')
+        else:
+            query = QSqlQuery()
+            # 若数据库中不存在tomorrow的数据表则将其删除，并打印"成功删除"
+            if tomorrow not in database.tables():
+                print('不存在{}'.format(tomorrow),'准备反写',today)
+                #todo 反写数据至model
+                conn = dataset.connect("sqlite:///test.db")
+                data_table = conn[today]
+                database_result = data_table.all().result_proxy
+                for row_index,row_data in enumerate(database_result):
+                    for col_index,value in enumerate(row_data[1:]):#舍去row_data的第一个元素，是个数字
+                        if col_index not in [1,2]:
+                            item = QTableWidgetItem(value)
+                            table_model.setItem(row_index, col_index, item)
+                        else:
+                            table_model.cellWidget(row_index,col_index).setCurrentText(value)
 
-
-
+            # 将today设为数据表的名字,建立完整的数据表
+            else:
+                print('存在{}'.format(tomorrow), '准备反写', tomorrow)
+                # todo 反写数据至model
+                conn = dataset.connect("sqlite:///test.db")
+                data_table = conn[tomorrow]
+                database_result = data_table.all().result_proxy
+                for row_index, row_data in enumerate(database_result):
+                    for col_index, value in enumerate(row_data[1:]):  # 舍去row_data的第一个元素，是个数字
+                        if col_index not in [1, 2]:
+                            item = QTableWidgetItem(value)
+                            table_model.setItem(row_index, col_index, item)
+                        else:
+                            table_model.cellWidget(row_index, col_index).setCurrentText(value)
 
 
 

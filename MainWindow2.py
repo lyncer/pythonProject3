@@ -13,6 +13,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtSql import QSqlDatabase, QSqlTableModel, QSqlQuery
 from datetime import datetime
 import dataset
+from PyQt5.QtGui import *
+from MenuBar import Menubar
 
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
               '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '挂车时间', '备注']
@@ -99,39 +101,41 @@ class Ui_MainWindow(object):
         self.model.setColumnCount(15)
         self.model.setHorizontalHeaderLabels(Head_label)
 
-        # 设置装车地点的列表头
-        # 表格中添加控件
-        # 先定义一个生成combox的函数 每次生成一个combox新对象
+        # 引入菜单栏
+        self.bar = MainWindow.menuBar()
+        self.file = self.bar.addMenu('文件')
+        self.file.addAction('新建')
+        self.save = QAction('过表', MainWindow)
+        self.save.setShortcut("Ctrl + S")
+        self.file.addAction(self.save)
+
+        self.edit = self.bar.addMenu('编辑')
+        add_station = QAction('添加到站',MainWindow)
+        self.edit.addAction(add_station)
+        self.edit.addAction('')
+
+        self.view = self.bar.addMenu('视图')
+        self.view.addAction('')
+        self.view.addAction('')
+
+
+
         def reborn_combox():
+            # 先定义一个生成combox的函数 每次生成一个combox新对象
             combox = QComboBox()
             combox.addItem('专一')
             combox.addItem('专二')
             return combox
-
-        for num in range(8):
-            self.model.setItem(num, 0, QTableWidgetItem('实业一期'))
-            self.model.setCellWidget(num, 1, reborn_combox())
-
         def reborn_combox1():
             combox = QComboBox()
             combox.addItem('专三')
             combox.addItem('专四')
             return combox
-
-        for num in range(8, 14):
-            self.model.setCellWidget(num, 1, reborn_combox1())
-            self.model.setItem(num, 0, QTableWidgetItem('实业二期'))
-
         def reborn_combox2():
             combox = QComboBox()
             combox.addItem('矿一')
             combox.addItem('矿二')
             return combox
-
-        for num in range(14, 24):
-            self.model.setItem(num, 0, QTableWidgetItem('矿三'))
-            self.model.setCellWidget(num, 1, reborn_combox2())
-
         # 定义装车去向的函数
         def reborn_combox3():
             quxiang_list = '无 古冶国义 首钢沙河驿 鑫达沙河驿 九江沙河驿 荣信沙河驿 松汀沙河驿 东华胥各庄 ' \
@@ -140,7 +144,15 @@ class Ui_MainWindow(object):
             for name in quxiang_list:
                 combox.addItem(name)
             return combox
-
+        for num in range(8):
+            self.model.setItem(num, 0, QTableWidgetItem('实业一期'))
+            self.model.setCellWidget(num, 1, reborn_combox())
+        for num in range(8, 14):
+            self.model.setCellWidget(num, 1, reborn_combox1())
+            self.model.setItem(num, 0, QTableWidgetItem('实业二期'))
+        for num in range(14, 24):
+            self.model.setItem(num, 0, QTableWidgetItem('矿三'))
+            self.model.setCellWidget(num, 1, reborn_combox2())
         for num in range(24):
             self.model.setCellWidget(num, 2, reborn_combox3())
 
@@ -148,21 +160,30 @@ class Ui_MainWindow(object):
         self.table_layout = QHBoxLayout()
         self.table_layout.addWidget(self.model)
         self.tableView.setLayout(self.table_layout)
+
+        Table.read_table(self.model)
+        # 检查程序打开时，是否存在名为今日的表格
+
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
         print(self.model.horizontalHeaderItem(0).text())
         # 信号——槽函数
         self.save_button.clicked.connect(self.tem_save)
+        add_station.triggered.connect(lambda :Menubar.addStation(MainWindow,MainWindow))
 
-    def tem_save(self):  # 定义保存按钮的函数：当点击保存时，重新初始化表格控件，连接数据库，将表格内容写入数据库
+    def tem_save(self):
+        # 定义保存按钮的函数：当点击保存时，重新初始化表格控件，连接数据库，将表格内容写入数据库
         Table.init_sql(self)
-        conn = dataset.connect("sqlite:///test.db")  # 注意路径格式
+        conn = dataset.connect("sqlite:///test.db")
+        # 注意路径格式
         data_table = conn[today]
         # todo data_table.insert(dict(id=1,装车地点='矿三'))
-        for row_num in range(24):# row_num 是0-23（表格的行数）
+        for row_num in range(24):
+            # row_num 是0-23（表格的行数）
             row_data = []
-            for col_num,col_name in enumerate(Head_label):# col_num 是0-14（表格的列数）
+            for col_num,col_name in enumerate(Head_label):
+                # col_num 是0-14（表格的列数）
                 try:
                     widget_content = self.model.cellWidget(row_num,col_num).currentText()
                     row_data.append(widget_content)
@@ -176,14 +197,18 @@ class Ui_MainWindow(object):
             data_table.insert(dict(zip(Head_label,row_data)))
 
 
-
-
         # 表格内控件的值
         # print(model.cellWidget(0,1).currentText())
         # 没有控件的单元格内的值
         # print(model.item(0,1).text())
         # 表头的值
         # self.model.horizontalHeaderItem(0).text()
+        # 设置控件内的值
+        # self.model.cellWidget(0, 1).setCurrentText('专二')
+
+        # 设置tablewidget单元格内的值
+        # shit = QTableWidgetItem('shit')
+        # self.model.setItem(1, 1, shit)
 
 
     def retranslateUi(self, MainWindow):
