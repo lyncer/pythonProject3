@@ -3,6 +3,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtSql import QSqlDatabase, QSqlTableModel,QSqlQuery
 from datetime import datetime
 import dataset
+import pandas as pd
+import sqlite3
 
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数','实装重车','调妥时间',
                                          '封堵开始','封堵结束', '装车开始', '装车完毕','平车开始', '平车结束', '挂车时间', '备注']
@@ -18,33 +20,21 @@ class Table:
         pass
 
     def init_sql(self):
-        # 初始化数据库
-
-        # db = dataset.connect('sqlite:///test.db')
-        # print(db.tables)
-        # cursor = db.query("SELECT * FROM '2020.12.1';")
-        # print([i for i in cursor.result_proxy])
-        # data = dict(装车地点='I am a aaabanana!')
-        # data = dict(zip(('as','sf'),(23,55)))
-        database = QSqlDatabase.addDatabase('QSQLITE')
-        database.setDatabaseName('test.db')
-        if not database.open():
-            print('数据库建立失败')
-        else:
-            query = QSqlQuery()
-            # 若数据库中已经存在名为today的数据表则将其删除，并打印"成功删除"
-            if today in database.tables():
-                sentence = "DROP TABLE" + " " + "'" + today + "'"
-                print(sentence)
-                query.exec_(sentence)
-                print('成功删除表 {}'.format(today))
-                print(database.tables())
-            # 将today设为数据表的名字,建立完整的数据表
+        conn = sqlite3.connect('test.db')
+        cursor = conn.cursor()
+        cursor.execute("select name from sqlite_master where type='table' order by name")
+        test_all_tables = cursor.fetchall()
+        # 打印出test.db中所有表名
+        # cursor.fetchall()输出的格式为：    [('2020.12.11',), ('2020.12.12',), ('2020.12.14',), ('remark_2020.12.14',), ('sqlite_sequence',)]
+        test_all_tables = [j for i in test_all_tables for j in i] # 格式为：['2020.12.11', '2020.12.12', '2020.12.14', 'remark_2020.12.14', 'sqlite_sequence']
+        if today not in  test_all_tables:
+            #如果数据库里没有名为today的表
+            print(f'没找到{today},重新建表')
             sentence = "CREATE TABLE " + "'" + today + "'" + " ('id' INTEGER,'装车地点' TEXT, '作业线路' TEXT,'装车去向' TEXT,'配空车次' TEXT,'配空车数' TEXT,'实装重车' TEXT,'调妥时间' TEXT,'封堵开始' TEXT,'封堵结束' TEXT,'装车开始' TEXT,'装车完毕' TEXT,'平车开始' TEXT,'平车结束' TEXT,'挂车时间' TEXT,'备注' TEXT,PRIMARY KEY('id' AUTOINCREMENT));"
-            query.exec_(sentence)
-            print('成功建立表格 {}'.format(today))
-            print('当前表格列表：',database.tables())
-            database.close()
+            cursor.execute(sentence)
+        else:
+            pass
+
 
     @staticmethod
     def read_table(table_model):
@@ -60,14 +50,24 @@ class Table:
                 #todo 反写数据至model
                 conn = dataset.connect("sqlite:///test.db")
                 data_table = conn[today]
-                database_result = data_table.all().result_proxy
-                for row_index,row_data in enumerate(database_result):
-                    for col_index,value in enumerate(row_data[1:]):#舍去row_data的第一个元素，是个数字
-                        if col_index not in [1,2]:
-                            item = QTableWidgetItem(value)
-                            table_model.setItem(row_index, col_index, item)
-                        else:
-                            table_model.cellWidget(row_index,col_index).setCurrentText(value)
+                try:
+                    database_result = data_table.all().result_proxy
+                    for row_index, row_data in enumerate(database_result):
+                        for col_index, value in enumerate(row_data[1:]):  # 舍去row_data的第一个元素，是个数字
+                            if col_index not in [1, 2]:
+                                item = QTableWidgetItem(value)
+                                table_model.setItem(row_index, col_index, item)
+                            else:
+                                table_model.cellWidget(row_index, col_index).setCurrentText(value)
+                except AttributeError:
+                    sentence = "CREATE TABLE " + "'" + today + "'" + " ('id' INTEGER,'装车地点' TEXT, '作业线路' TEXT,'装车去向' TEXT,'配空车次' TEXT,'配空车数' TEXT,'实装重车' TEXT,'调妥时间' TEXT,'封堵开始' TEXT,'封堵结束' TEXT,'装车开始' TEXT,'装车完毕' TEXT,'平车开始' TEXT,'平车结束' TEXT,'挂车时间' TEXT,'备注' TEXT,PRIMARY KEY('id' AUTOINCREMENT));"
+                    query.exec_(sentence)
+                    print('成功建立表格 {}'.format(today))
+                    print('当前表格列表：', database.tables())
+                    database.commit()
+                    database.close()
+
+
 
             # 将today设为数据表的名字,建立完整的数据表
             else:
@@ -86,6 +86,51 @@ class Table:
 
 
 
+
+class Remarks:
+    def __init__(self):
+        pass
+
+    def show_dialog(self,remark_button):
+        database = QSqlDatabase.addDatabase('QSQLITE')
+        database.setDatabaseName('test.db')
+        if not database.open():
+            print('数据库建立失败')
+        else:
+            remark_today = 'remark_' + today
+            query = QSqlQuery()
+            # 若数据库中已经存在名为today的数据表则将其删除，并打印"成功删除"
+            if today in database.tables():
+                sentence = "DROP TABLE" + " " + "'" + remark_today + "'"
+                print(sentence)
+                query.exec_(sentence)
+                print('成功删除表 {}'.format(today))
+                print(database.tables())
+            # 将today设为数据表的名字,建立完整的数据表
+            sentence = "CREATE TABLE " + "'" + remark_today + "'" + " ('id' INTEGER,'装车地点' TEXT, '作业线路' TEXT,PRIMARY KEY('id' AUTOINCREMENT));"
+            query.exec_(sentence)
+
+            conn = dataset.connect("sqlite:///test.db")
+            # 注意路径格式
+            data_table = conn[today]
+            print('成功建立表格 {}'.format(today))
+            print('当前表格列表：', database.tables())
+            database.close()
+
+        remark_dialog = QDialog()
+        lay = QFormLayout(remark_dialog)
+
+        edit1 = QComboBox()
+        edit1.addItems(['设备故障','混配卸船'])
+        edit2 = QLineEdit()
+        edit2.setPlaceholderText('时间')
+        edit3 = QTextEdit()
+
+        lay.addRow(edit1)
+        lay.addRow(edit2)
+        lay.addRow(edit3)
+        print(remark_button.sender().parent().pos())
+        remark_dialog.exec_()
 
 
 
