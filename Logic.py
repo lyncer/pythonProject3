@@ -5,9 +5,10 @@ from datetime import datetime
 import dataset
 import pandas as pd
 import sqlite3
+from PyQt5 import QtCore
 
-Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数','实装重车','调妥时间',
-                                         '封堵开始','封堵结束', '装车开始', '装车完毕','平车开始', '平车结束', '挂车时间', '备注']
+Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
+              '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件','挂车时间', '备注']
 
 Today = datetime.today()
 # 定义today 为“2020.xx.xx”格式的字符串
@@ -92,45 +93,56 @@ class Remarks:
         pass
 
     def show_dialog(self,remark_button):
-        database = QSqlDatabase.addDatabase('QSQLITE')
-        database.setDatabaseName('test.db')
-        if not database.open():
-            print('数据库建立失败')
-        else:
-            remark_today = 'remark_' + today
-            query = QSqlQuery()
-            # 若数据库中已经存在名为today的数据表则将其删除，并打印"成功删除"
-            if today in database.tables():
-                sentence = "DROP TABLE" + " " + "'" + remark_today + "'"
-                print(sentence)
-                query.exec_(sentence)
-                print('成功删除表 {}'.format(today))
-                print(database.tables())
-            # 将today设为数据表的名字,建立完整的数据表
-            sentence = "CREATE TABLE " + "'" + remark_today + "'" + " ('id' INTEGER,'装车地点' TEXT, '作业线路' TEXT,PRIMARY KEY('id' AUTOINCREMENT));"
-            query.exec_(sentence)
+        # database = QSqlDatabase.addDatabase('QSQLITE')
+        # database.setDatabaseName('test.db')
+        # if not database.open():
+        #     print('数据库建立失败')
+        # else:
+        #     remark_today = 'remark_' + today
+        #     query = QSqlQuery()
+        #     # 若数据库中已经存在名为today的数据表则将其删除，并打印"成功删除"
+        #     if today in database.tables():
+        #         sentence = "DROP TABLE" + " " + "'" + remark_today + "'"
+        #         print(sentence)
+        #         query.exec_(sentence)
+        #         print('成功删除表 {}'.format(today))
+        #         print(database.tables())
+        #     # 将today设为数据表的名字,建立完整的数据表
+        #     sentence = "CREATE TABLE " + "'" + remark_today + "'" + " ('id' INTEGER,'装车地点' TEXT, '作业线路' TEXT,PRIMARY KEY('id' AUTOINCREMENT));"
+        #     query.exec_(sentence)
+        #
+        #     conn = dataset.connect("sqlite:///test.db")
+        #     # 注意路径格式
+        #     data_table = conn[today]
+        #     print('成功建立表格 {}'.format(today))
+        #     print('当前表格列表：', database.tables())
+        #     database.close()
+        conn = sqlite3.connect('test.db')
 
-            conn = dataset.connect("sqlite:///test.db")
-            # 注意路径格式
-            data_table = conn[today]
-            print('成功建立表格 {}'.format(today))
-            print('当前表格列表：', database.tables())
-            database.close()
 
         remark_dialog = QDialog()
         lay = QFormLayout(remark_dialog)
 
         edit1 = QComboBox()
-        edit1.addItems(['设备故障','混配卸船'])
+        edit1.addItems(['设备故障','混配卸船','天气因素'])
         edit2 = QLineEdit()
         edit2.setPlaceholderText('时间')
         edit3 = QTextEdit()
 
+
         lay.addRow(edit1)
         lay.addRow(edit2)
         lay.addRow(edit3)
-        print(remark_button.sender().parent().pos())
+        print(remark_button.sender().pos())
         remark_dialog.exec_()
 
 
+class MyVersionQTableWidget(QTableWidget):
+    def __init__(self):
+        super(MyVersionQTableWidget, self).__init__()
+
+    def keyPressEvent(self, event):
+        super(MyVersionQTableWidget, self).keyPressEvent(event)
+        if event.key() == 16777220:
+            self.focusNextChild()
 
