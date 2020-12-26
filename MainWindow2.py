@@ -35,7 +35,7 @@ class Ui_MainWindow(object):
         self.setupUi(Main_Window)
 
     def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
+        MainWindow.setObjectName("曹妃甸南货调写实系统")
         MainWindow.setWindowTitle('曹妃甸南货调写实系统')
         MainWindow.resize(1024, 638)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -100,6 +100,8 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.model = MyVersionQTableWidget()
+        # self.model.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
+
         self.model.setRowCount(24)
         self.model.setColumnCount(16)
         self.model.setHorizontalHeaderLabels(Head_label)
@@ -109,8 +111,10 @@ class Ui_MainWindow(object):
         self.file = self.bar.addMenu('文件')
         self.file.addAction('新建')
         self.save = QAction('过表', MainWindow)
-        self.save.setShortcut("Ctrl + S")
+
+
         self.file.addAction(self.save)
+
 
         self.edit = self.bar.addMenu('编辑')
         add_station = QAction('添加到站',MainWindow)
@@ -118,8 +122,15 @@ class Ui_MainWindow(object):
         self.edit.addAction('')
 
         self.view = self.bar.addMenu('视图')
-        self.view.addAction('')
-        self.view.addAction('')
+        self.yesterday_table = QAction('前日写实',MainWindow)
+        self.today_table = QAction('当日写实',MainWindow)
+        self.view.addAction(self.yesterday_table)
+        self.view.addAction(self.today_table)
+        self.yesterday_table.triggered.connect(lambda :Menubar.yesterday_table(self.model))
+        self.today_table.triggered.connect(lambda: Menubar.today_table(self.model))
+
+
+
 
 
 
@@ -159,7 +170,7 @@ class Ui_MainWindow(object):
 
         def bulid_remark_button():
             self.remark_button = QPushButton('添加备注')
-            self.remark_button.clicked.connect(lambda :Remarks.show_dialog(self.remark_button,self.remark_button))
+            self.remark_button.clicked.connect(lambda :Remarks.show_dialog(self.remark_button,self.remark_button,self.model))
             return self.remark_button
 
         for num in range(0,24):
@@ -180,7 +191,6 @@ class Ui_MainWindow(object):
         # 信号——槽函数
         self.save_button.clicked.connect(self.tem_save)
         add_station.triggered.connect(lambda :Menubar.addStation(MainWindow,MainWindow))
-        self.remark_button.clicked.connect(Remarks.show_dialog)
         Table.init_sql(self)
 
     def tem_save(self):
@@ -210,6 +220,7 @@ class Ui_MainWindow(object):
         table_df = pd.DataFrame(row_table)
         table_df.columns = Head_label
         print(table_df)
+        table_df.to_csv('shit.csv')
         table_df.to_sql(today,conn,if_exists='replace')
         # 若存在名为today的表，则替换
         conn.commit()
