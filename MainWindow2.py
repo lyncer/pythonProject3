@@ -128,7 +128,7 @@ class Ui_MainWindow(object):
         self.view.addAction(self.today_table)
         self.yesterday_table.triggered.connect(lambda :Menubar.yesterday_table(self.model))
         self.today_table.triggered.connect(lambda: Menubar.today_table(self.model))
-
+        self.input_model.clicked.connect(lambda :Menubar.test(self.model))
 
 
 

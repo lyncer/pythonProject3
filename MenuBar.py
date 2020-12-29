@@ -6,6 +6,8 @@ from PyQt5.QtGui import *
 import dataset
 import Logic
 
+
+
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
               '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件', '挂车时间', '备注']
 
@@ -69,3 +71,21 @@ class Menubar:
     @staticmethod
     def today_table(table_model):
         Logic.Table.read_table(table_model)
+
+    @staticmethod
+    def add_station(table_model):
+        pass
+
+
+
+
+    @staticmethod
+    def add_row(table_model):
+        pass
+
+
+    @staticmethod
+    def test(table_model):
+        item = [table_model.currentColumn(),table_model]
+        print(table_model.column(item))
+
