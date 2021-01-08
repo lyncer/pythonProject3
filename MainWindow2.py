@@ -10,7 +10,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from Logic import Table,Remarks,MyVersionQTableWidget
 from PyQt5.QtWidgets import *
-from datetime import datetime
+from datetime import datetime,timedelta
 from MenuBar import Menubar
 import pandas as pd
 import sqlite3
@@ -22,10 +22,11 @@ Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '�
 quxiang_list = '无 古冶国义 首钢沙河驿 鑫达沙河驿 九江沙河驿 荣信沙河驿 松汀沙河驿 东华胥各庄 ' \
                            '瑞丰胥各庄 燕钢迁安 津西贾庵子 唐山东海雷庄 古冶经安 河北东海古冶 河北东海雷庄 河钢唐南 港陆团瓢庄'.split()
 
-
-today = datetime.today()
+Today = datetime.today()
 # 定义today 为“2020.xx.xx”格式的字符串
-today = '.'.join(map(str, [today.year, today.month, today.day]))
+today =  Today.strftime('%Y.%m.%d')
+tomorrow = Today + timedelta(days=1)
+tomorrow = tomorrow.strftime('%Y.%m.%d')
 
 
 
@@ -130,6 +131,7 @@ class Ui_MainWindow(object):
         self.yesterday_table.triggered.connect(lambda :Menubar.yesterday_table(self.model))
         self.today_table.triggered.connect(lambda: Menubar.today_table(self.model))
         self.input_model.clicked.connect(lambda :Menubar.test(self.model))
+        self.save.triggered.connect(lambda :Menubar.passtable(self.model,self.statusbar))
 
 
 
@@ -177,74 +179,77 @@ class Ui_MainWindow(object):
         for num in range(0,24):
             self.model.setCellWidget(num, 15, bulid_remark_button())
 
+            # =============数据库内列表加入多选栏=======================
+            def table_list_for_combox(test_all_tables=Table.test_all_tables, time_format='%Y.%m.%d'):
+                table_name_list = []
+                for table_name in test_all_tables:
+                    try:
+                        table_name = datetime.strptime(table_name, time_format)
+                        table_name_list.append(table_name)
+                    except ValueError:
+                        continue
+                ls = table_name_list
+                #   ==用了冒泡排序来排序，其他方法效果一样==
+                for j in range(len(ls) - 1):
+                    for i in range(len(ls) - j - 1):
+                        lower = ls[i]
+                        upper = ls[i + 1]
+                        if lower > upper:
+                            ls[i], ls[i + 1] = ls[i + 1], ls[i]
+                ls = list(ls)
+                ls = [datetime.strftime(name, '%Y.%m.%d') for name in ls]
+
+                # 将ls列表中元素从datetime格式转化为str格式
+                print(ls)
+                return ls[-1], ls[-2], ls[-3], ls[-4]
+                # table_name_list 为符合datetime格式的数据表名字
+            self.one , self.two , self.three , self.four = table_list_for_combox()
+            # =======================================================
+
 
         # 将table函数返回的layout置于tableview控件之中
         self.table_layout = QHBoxLayout()
         self.table_layout.addWidget(self.model)
         self.tableView.setLayout(self.table_layout)
-        Table.read_table(self.model)
-        # 检查程序打开时，是否存在名为今日的表格
+        Table.read_table(self.model,self.two,self.statusbar)
+        # 程序打开时，自动反写GroupBox当前时间的数据表
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
         print(self.model.horizontalHeaderItem(0).text())
         # 信号——槽函数
-        self.save_button.clicked.connect(self.tem_save)
+        self.save_button.clicked.connect(lambda :Table.tem_save(self.model,self.GroupBox.currentText()))
         add_station.triggered.connect(lambda :Menubar.addStation(MainWindow,MainWindow))
+        self.GroupBox.currentIndexChanged.connect(self.groupchange)
         Table.init_sql(self)
 
-    def tem_save(self):
-        # 定义保存按钮的函数：当点击保存时，重新初始化表格控件，连接数据库，将表格内容写入数据库
-        # Table.init_sql(self)
-        conn = sqlite3.connect('test.db')
-        # 注意路径格式
-
-        # todo data_table.insert(dict(id=1,装车地点='矿三'))
-        table_df = pd.DataFrame()
-        row_table = []
-        for row_num in range(24):
-            # row_num 是0-23（表格的行数）
-            row_data = []
-            for col_num,col_name in enumerate(Head_label):
-                # col_num 是0-14（表格的列数）
-                try:
-                    widget_content = self.model.cellWidget(row_num,col_num).currentText()
-                    row_data.append(widget_content)
-                except AttributeError:
-                    try:
-                        widget_content = self.model.item(row_num,col_num).text()
-                        row_data.append(widget_content)
-                    except AttributeError:
-                        row_data.append('')
-            row_table.append(row_data)
-        table_df = pd.DataFrame(row_table)
-        table_df.columns = Head_label
-        print(table_df)
-        table_df.to_csv('shit.csv')
-        table_df.to_sql(today,conn,if_exists='replace')
-        # 若存在名为today的表，则替换
-        conn.commit()
-        conn.close()
 
 
+    def groupchange(self):
+        Table.read_table(self.model,self.GroupBox.currentText(),self.statusbar)
+        print(self.GroupBox.currentText())
 
+#================================================================================================
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.report_model.setText(_translate("MainWindow", "报表模式"))
         self.input_model.setText(_translate("MainWindow", "输入模式"))
         self.save_button.setText(_translate('MainWindow', '保存'))
-        self.GroupBox.setItemText(0, _translate("MainWindow", "无"))
-        self.GroupBox.setItemText(1, _translate("MainWindow", "装车地点"))
-        self.GroupBox.setItemText(2, _translate("MainWindow", "到站"))
-        self.GroupBox.setItemText(3, _translate("MainWindow", "线路"))
+        self.GroupBox.setItemText(0, _translate("MainWindow", self.one))
+        self.GroupBox.setItemText(1, _translate("MainWindow", self.two))
+        self.GroupBox.setItemText(2, _translate("MainWindow", self.three))
+        self.GroupBox.setItemText(3, _translate("MainWindow", self.four))
         self.AggBox.setItemText(0, _translate("MainWindow", "无"))
         self.AggBox.setItemText(1, _translate("MainWindow", "用时总和"))
         self.AggBox.setItemText(2, _translate("MainWindow", "用时平均值"))
         self.AggBox.setItemText(3, _translate("MainWindow", "用时极值"))
         self.over_time.setText(_translate("MainWindow", "超时"))
-        #todo
+        self.GroupBox.setCurrentIndex(2)
+
+
+
 
 if __name__ == '__main__':
     import sys
