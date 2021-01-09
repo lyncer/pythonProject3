@@ -7,6 +7,7 @@ import pandas as pd
 import sqlite3
 from PyQt5 import QtCore
 from Sql_connect import Sql
+from DataWash import *
 
 
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
@@ -57,7 +58,6 @@ class Table:
             # result_proxy 对象的 fetchall方法  可以检查是否为空表
             try:
                 for row_index, row_data in enumerate(database_result):
-                    print(row_index,row_data)
                     for col_index, value in enumerate(row_data[1:]):  # 舍去row_data的第一个元素，是个数字
                         if col_index not in [1, 2]:
                             item = QTableWidgetItem(value)
@@ -80,12 +80,9 @@ class Table:
 
     @staticmethod
     def tem_save(table,table_time):
-        # 定义保存按钮的函数：当点击保存时，重新初始化表格控件，连接数据库，将表格内容写入数据库
-        # Table.init_sql(self)
+        # 定义保存按钮的函数：当点击保存时，连接数据库，将表格内容写入数据库
         conn = sqlite3.connect('test.db')
         # 注意路径格式
-
-        # todo data_table.insert(dict(id=1,装车地点='矿三'))
         table_df = pd.DataFrame()
         row_table = []
         for row_num in range(24):
@@ -96,16 +93,18 @@ class Table:
                 try:
                     widget_content = table.cellWidget(row_num,col_num).currentText()
                     row_data.append(widget_content)
+                    # 表格的控件内容
                 except AttributeError:
                     try:
                         widget_content = table.item(row_num,col_num).text()
                         row_data.append(widget_content)
+                        # 表格的非控件内容
                     except AttributeError:
                         row_data.append('')
             row_table.append(row_data)
         table_df = pd.DataFrame(row_table)
         table_df.columns = Head_label
-        print(table_df)
+
         table_df.to_csv('shit.csv')
         table_df.to_sql(table_time,conn,if_exists='replace')
         # 若存在名为today的表，则替换

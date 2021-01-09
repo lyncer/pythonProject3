@@ -70,27 +70,7 @@ class Menubar:
         Logic.Table.read_table(table_model)
         print(Logic.Table.test_all_tables,'shit')
 
-    @staticmethod
-    def passtable(table_model,status_bar=None):
-        button = QMessageBox.critical( table_model,  "注意", "今日写实填写完毕后方可过表操作，确定过表吗？",QMessageBox.Ok|QMessageBox.Cancel,QMessageBox.Ok)
-        if button == QMessageBox.Ok:
-            conn = sqlite3.connect('test.db')
-            cursor = conn.cursor()
-            cursor.execute("select name from sqlite_master where type='table' order by name")
-            test_all_tables = cursor.fetchall()
-            # 打印出test.db中所有表名
-            # cursor.fetchall()输出的格式为：    [('2020.12.11',), ('2020.12.12',), ('2020.12.14',), ('remark_2020.12.14',), ('sqlite_sequence',)]
-            test_all_tables = [j for i in test_all_tables for j in
-                               i]  # 格式为：['2020.12.11', '2020.12.12', '2020.12.14', 'remark_2020.12.14', 'sqlite_sequence']
-            if tomorrow not in test_all_tables:
-                # 如果数据库里没有名为today的表
-                status_bar.showMessage('成功过表，目前写实日期为' + tomorrow)
-                sentence = "CREATE TABLE " + "'" + tomorrow + "'" + " ('id' INTEGER,'装车地点' TEXT, '作业线路' TEXT,'装车去向' TEXT,'配空车次' TEXT,'配空车数' TEXT,'实装重车' TEXT,'调妥时间' TEXT,'封堵开始' TEXT,'封堵结束' TEXT,'装车开始' TEXT,'装车完毕' TEXT,'平车开始' TEXT,'平车结束' TEXT,'挂车时间' TEXT,'备注' TEXT,PRIMARY KEY('id' AUTOINCREMENT));"
-                cursor.execute(sentence)
-            else:
-                status_bar.showMessage('已存在{}数据表'.format(tomorrow))
-                Logic.Table.read_table(table_model,table_time=tomorrow)
-                #todo 若保存也是保存到tomorrow才行
+
 
 
 

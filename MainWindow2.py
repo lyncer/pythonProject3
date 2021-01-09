@@ -131,8 +131,7 @@ class Ui_MainWindow(object):
         self.yesterday_table.triggered.connect(lambda :Menubar.yesterday_table(self.model))
         self.today_table.triggered.connect(lambda: Menubar.today_table(self.model))
         self.input_model.clicked.connect(lambda :Menubar.test(self.model))
-        self.save.triggered.connect(lambda :Menubar.passtable(self.model,self.statusbar))
-
+        self.save.triggered.connect(lambda :self.passtable(self.statusbar,self.model))
 
 
 
@@ -179,31 +178,30 @@ class Ui_MainWindow(object):
         for num in range(0,24):
             self.model.setCellWidget(num, 15, bulid_remark_button())
 
-            # =============数据库内列表加入多选栏=======================
-            def table_list_for_combox(test_all_tables=Table.test_all_tables, time_format='%Y.%m.%d'):
-                table_name_list = []
-                for table_name in test_all_tables:
-                    try:
-                        table_name = datetime.strptime(table_name, time_format)
-                        table_name_list.append(table_name)
-                    except ValueError:
-                        continue
-                ls = table_name_list
-                #   ==用了冒泡排序来排序，其他方法效果一样==
-                for j in range(len(ls) - 1):
-                    for i in range(len(ls) - j - 1):
-                        lower = ls[i]
-                        upper = ls[i + 1]
-                        if lower > upper:
-                            ls[i], ls[i + 1] = ls[i + 1], ls[i]
-                ls = list(ls)
-                ls = [datetime.strftime(name, '%Y.%m.%d') for name in ls]
-
-                # 将ls列表中元素从datetime格式转化为str格式
-                print(ls)
-                return ls[-1], ls[-2], ls[-3], ls[-4]
-                # table_name_list 为符合datetime格式的数据表名字
-            self.one , self.two , self.three , self.four = table_list_for_combox()
+        # =============数据库内列表加入多选栏=======================
+        def table_list_for_combox(test_all_tables=Table.test_all_tables, time_format='%Y.%m.%d'):
+            table_name_list = []
+            for table_name in test_all_tables:
+                try:
+                    table_name = datetime.strptime(table_name, time_format)
+                    table_name_list.append(table_name)
+                except ValueError:
+                    continue
+            ls = list(set(table_name_list))
+            #   ==用了冒泡排序来排序，其他方法效果一样==
+            for j in range(len(ls) - 1):
+                for i in range(len(ls) - j - 1):
+                    lower = ls[i]
+                    upper = ls[i + 1]
+                    if lower > upper:
+                        ls[i], ls[i + 1] = ls[i + 1], ls[i]
+            ls = list(ls)
+            ls = [datetime.strftime(name, '%Y.%m.%d') for name in ls]
+            # 将ls列表中元素从datetime格式转化为str格式
+            print(ls)
+            return ls[-1], ls[-2], ls[-3], ls[-4]
+            # table_name_list 为符合datetime格式的数据表名字
+        self.one , self.two , self.three , self.four = table_list_for_combox()
             # =======================================================
 
 
@@ -224,12 +222,34 @@ class Ui_MainWindow(object):
         self.GroupBox.currentIndexChanged.connect(self.groupchange)
         Table.init_sql(self)
 
-
-
+            # ================组合下拉框改变函数==========================================================
     def groupchange(self):
         Table.read_table(self.model,self.GroupBox.currentText(),self.statusbar)
         print(self.GroupBox.currentText())
 
+            # ================过表函数==========================================================
+    def passtable(self, status_bar, table_model):
+        button = QMessageBox.critical(table_model, "注意", "今日写实填写完毕后方可过表操作，确定过表吗？",
+                                      QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok)
+        if button == QMessageBox.Ok:
+            conn = sqlite3.connect('test.db')
+            cursor = conn.cursor()
+            cursor.execute("select name from sqlite_master where type='table' order by name")
+            test_all_tables = cursor.fetchall()
+            # 打印出test.db中所有表名
+            # cursor.fetchall()输出的格式为：    [('2020.12.11',), ('2020.12.12',), ('2020.12.14',), ('remark_2020.12.14',), ('sqlite_sequence',)]
+            test_all_tables = [j for i in test_all_tables for j in
+                               i]  # 格式为：['2020.12.11', '2020.12.12', '2020.12.14', 'remark_2020.12.14', 'sqlite_sequence']
+            if tomorrow not in test_all_tables:
+                # 如果数据库里没有名为today的表
+                status_bar.showMessage('成功过表，目前写实日期为' + tomorrow)
+                sentence = "CREATE TABLE " + "'" + tomorrow + "'" + " ('id' INTEGER,'装车地点' TEXT, '作业线路' TEXT,'装车去向' TEXT,'配空车次' TEXT,'配空车数' TEXT,'实装重车' TEXT,'调妥时间' TEXT,'封堵开始' TEXT,'封堵结束' TEXT,'装车开始' TEXT,'装车完毕' TEXT,'平车开始' TEXT,'平车结束' TEXT,'挂车时间' TEXT,'备注' TEXT,PRIMARY KEY('id' AUTOINCREMENT));"
+                cursor.execute(sentence)
+            else:
+                status_bar.showMessage('已存在{}数据表'.format(tomorrow))
+                Table.read_table(table_model, table_time=tomorrow,status_bar=self.statusbar)
+                self.GroupBox.setCurrentText(tomorrow)
+                # todo 若保存也是保存到tomorrow才行
 #================================================================================================
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
