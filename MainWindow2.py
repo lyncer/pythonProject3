@@ -17,7 +17,7 @@ import sqlite3
 from PyQt5.Qt import QKeyEvent
 
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
-              '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件','挂车时间', '备注']
+              '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件','挂车时间', '线内作业时间分析','待挂时间分析']
 
 quxiang_list = '无 古冶国义 首钢沙河驿 鑫达沙河驿 九江沙河驿 荣信沙河驿 松汀沙河驿 东华胥各庄 ' \
                            '瑞丰胥各庄 燕钢迁安 津西贾庵子 唐山东海雷庄 古冶经安 河北东海古冶 河北东海雷庄 河钢唐南 港陆团瓢庄'.split()
@@ -105,7 +105,7 @@ class Ui_MainWindow(object):
         # self.model.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
 
         self.model.setRowCount(24)
-        self.model.setColumnCount(16)
+        self.model.setColumnCount(17)
         self.model.setHorizontalHeaderLabels(Head_label)
 
         # 引入菜单栏
@@ -172,7 +172,7 @@ class Ui_MainWindow(object):
 
         def bulid_remark_button():
             self.remark_button = QPushButton('添加备注')
-            self.remark_button.clicked.connect(lambda :Remarks.show_dialog(self.remark_button,self.remark_button,self.model))
+            self.remark_button.clicked.connect(lambda :Remarks.show_dialog(self.remark_button,self.remark_button,self.model,self.GroupBox.currentText()))
             return self.remark_button
 
         for num in range(0,24):
@@ -237,17 +237,23 @@ class Ui_MainWindow(object):
             cursor.execute("select name from sqlite_master where type='table' order by name")
             test_all_tables = cursor.fetchall()
             # 打印出test.db中所有表名
-            # cursor.fetchall()输出的格式为：    [('2020.12.11',), ('2020.12.12',), ('2020.12.14',), ('remark_2020.12.14',), ('sqlite_sequence',)]
+            # cursor.fetchall()输出的格式为：[('2020.12.11',), ('2020.12.12',), ('2020.12.14',)]
             test_all_tables = [j for i in test_all_tables for j in
-                               i]  # 格式为：['2020.12.11', '2020.12.12', '2020.12.14', 'remark_2020.12.14', 'sqlite_sequence']
+                               i]  # 格式为：['2020.12.11', '2020.12.12', '2020.12.14']
             if tomorrow not in test_all_tables:
-                # 如果数据库里没有名为today的表
+            # 如果数据库里没有名为today的表
                 status_bar.showMessage('成功过表，目前写实日期为' + tomorrow)
-                sentence = "CREATE TABLE " + "'" + tomorrow + "'" + " ('id' INTEGER,'装车地点' TEXT, '作业线路' TEXT,'装车去向' TEXT,'配空车次' TEXT,'配空车数' TEXT,'实装重车' TEXT,'调妥时间' TEXT,'封堵开始' TEXT,'封堵结束' TEXT,'装车开始' TEXT,'装车完毕' TEXT,'平车开始' TEXT,'平车结束' TEXT,'挂车时间' TEXT,'备注' TEXT,PRIMARY KEY('id' AUTOINCREMENT));"
+                sentence = "CREATE TABLE " + "'" + tomorrow + "'" + " ('id' INTEGER,'装车地点' TEXT, '作业线路' TEXT," \
+                                                                    "'装车去向' TEXT,'配空车次' TEXT," \
+                                                                    "'配空车数' TEXT,'实装重车' TEXT,'调妥时间' TEXT," \
+                                                                    "'封堵开始' TEXT,'封堵结束' TEXT,'装车开始' " \
+                                                                    "TEXT,'装车完毕' TEXT,'平车开始' TEXT,'平车结束' TEXT," \
+                                                                    "'挂车时间' TEXT,'备注' TEXT," \
+                                                                    "PRIMARY KEY('id' AUTOINCREMENT));"
                 cursor.execute(sentence)
             else:
                 status_bar.showMessage('已存在{}数据表'.format(tomorrow))
-                Table.read_table(table_model, table_time=tomorrow,status_bar=self.statusbar)
+                Table.read_table(table_model, table_time=tomorrow, status_bar=self.statusbar)
                 self.GroupBox.setCurrentText(tomorrow)
                 # todo 若保存也是保存到tomorrow才行
 #================================================================================================
@@ -266,7 +272,7 @@ class Ui_MainWindow(object):
         self.AggBox.setItemText(2, _translate("MainWindow", "用时平均值"))
         self.AggBox.setItemText(3, _translate("MainWindow", "用时极值"))
         self.over_time.setText(_translate("MainWindow", "超时"))
-        self.GroupBox.setCurrentIndex(2)
+        self.GroupBox.setCurrentIndex(1)
 
 
 

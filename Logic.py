@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtSql import QSqlDatabase, QSqlTableModel, QSqlQuery
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 import dataset
 import pandas as pd
 import sqlite3
@@ -9,13 +9,12 @@ from PyQt5 import QtCore
 from Sql_connect import Sql
 from DataWash import *
 
-
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
               '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件', '挂车时间', '备注']
 
 Today = datetime.today()
 # 定义today 为“2020.xx.xx”格式的字符串
-today =  Today.strftime('%Y.%m.%d')
+today = Today.strftime('%Y.%m.%d')
 tomorrow = Today + timedelta(days=1)
 tomorrow = tomorrow.strftime('%Y.%m.%d')
 
@@ -25,10 +24,13 @@ class Table:
     cursor = conn.cursor()
     cursor.execute("select name from sqlite_master where type='table' order by name")
     test_all_tables = cursor.fetchall()
+    conn.commit()
+    conn.close()
     # 打印出test.db中所有表名
     # cursor.fetchall()输出的格式为：    [('2020.12.11',), ('2020.12.12',), ('2020.12.14',), ('remark_2020.12.14',), ('sqlite_sequence',)]
     test_all_tables = [j for i in test_all_tables for j in
                        i]  # 格式为：['2020.12.11', '2020.12.12', '2020.12.14', 'remark_2020.12.14', 'sqlite_sequence']
+
     def __init__(self):
         pass
 
@@ -46,7 +48,7 @@ class Table:
             pass
 
     @staticmethod
-    def read_table(table_model,table_time,status_bar):
+    def read_table(table_model, table_time, status_bar):
         database = Sql.try_connect_sql(table_model)
         # todo 反写数据至model
         conn = dataset.connect("sqlite:///test.db")
@@ -66,20 +68,20 @@ class Table:
                             table_model.cellWidget(row_index, col_index).setCurrentText(value)
             except:
                 status_bar.showMessage('出现问题')
-                    # except AttributeError:
-                    #     sentence = "CREATE TABLE " + "'" + table_time + "'" + " ('id' INTEGER,'装车地点' TEXT, '作业线路' TEXT,'装车去向' TEXT,'配空车次' TEXT,'配空车数' TEXT,'实装重车' TEXT,'调妥时间' TEXT,'封堵开始' TEXT,'封堵结束' TEXT,'装车开始' TEXT,'装车完毕' TEXT,'平车开始' TEXT,'平车结束' TEXT,'挂车时间' TEXT,'备注' TEXT,PRIMARY KEY('id' AUTOINCREMENT));"
-                    #     query.exec_(sentence)
-                    #     print('成功建立表格 {}'.format(table_time))
+                # except AttributeError:
+                #     sentence = "CREATE TABLE " + "'" + table_time + "'" + " ('id' INTEGER,'装车地点' TEXT, '作业线路' TEXT,'装车去向' TEXT,'配空车次' TEXT,'配空车数' TEXT,'实装重车' TEXT,'调妥时间' TEXT,'封堵开始' TEXT,'封堵结束' TEXT,'装车开始' TEXT,'装车完毕' TEXT,'平车开始' TEXT,'平车结束' TEXT,'挂车时间' TEXT,'备注' TEXT,PRIMARY KEY('id' AUTOINCREMENT));"
+                #     query.exec_(sentence)
+                #     print('成功建立表格 {}'.format(table_time))
             conn.commit()
             conn.close()
         else:
-            QMessageBox.critical(table_model, "注意", "{}无数据".format(table_time), QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok)
+            QMessageBox.critical(table_model, "注意", "{}无数据".format(table_time), QMessageBox.Ok | QMessageBox.Cancel,
+                                 QMessageBox.Ok)
         status_bar.showMessage(table_time)
-
-
+        #todo 抹除当前页面数据
 
     @staticmethod
-    def tem_save(table,table_time):
+    def tem_save(table, table_time):
         # 定义保存按钮的函数：当点击保存时，连接数据库，将表格内容写入数据库
         conn = sqlite3.connect('test.db')
         # 注意路径格式
@@ -88,15 +90,15 @@ class Table:
         for row_num in range(24):
             # row_num 是0-23（表格的行数）
             row_data = []
-            for col_num,col_name in enumerate(Head_label):
+            for col_num, col_name in enumerate(Head_label):
                 # col_num 是0-14（表格的列数）
                 try:
-                    widget_content = table.cellWidget(row_num,col_num).currentText()
+                    widget_content = table.cellWidget(row_num, col_num).currentText()
                     row_data.append(widget_content)
                     # 表格的控件内容
                 except AttributeError:
                     try:
-                        widget_content = table.item(row_num,col_num).text()
+                        widget_content = table.item(row_num, col_num).text()
                         row_data.append(widget_content)
                         # 表格的非控件内容
                     except AttributeError:
@@ -104,51 +106,57 @@ class Table:
             row_table.append(row_data)
         table_df = pd.DataFrame(row_table)
         table_df.columns = Head_label
-
+        table_df.replace(regex=r'[:/-]', value='.', inplace=True)
+        table_df.replace(regex=u'：', value='.', inplace=True)
         table_df.to_csv('shit.csv')
-        table_df.to_sql(table_time,conn,if_exists='replace')
+        table_df.to_sql(table_time, conn, if_exists='replace')
+        try:
+            table_df.to_sql(table_time + '_analyse', conn, if_exists='replace')
+        except:
+            pass
         # 若存在名为today的表，则替换
         conn.commit()
         conn.close()
 
 
-
 class Remarks:
-    sql_name = today + ' breakdown'
-    # 设数据库名称为：今日加breakdown 例如 "2020.12.22 breakdown"
-    conn = sqlite3.connect('test.db')
-    cursor = conn.cursor()
-    cursor.execute("select name from sqlite_master where type='table' order by name")
-    table_list = cursor.fetchall()
-    table_list = [j for i in table_list for j in i]
-    if sql_name in table_list:
-        df = pd.read_sql('select * from {}'.format('"' + sql_name + '"'), conn)
-        df = df.iloc[:, 1:]
-    else:
-        df = pd.DataFrame(columns=['index', 'row_num', 'type', 'time'])
-    conn.commit()
-    conn.close()
-
     # 这是故障类型和时间的列表
 
     def __init__(self):
         pass
 
-    def show_dialog(self, remark_button, model):
+    def show_dialog(self, remark_button, model,table_time):
+        sql_name = table_time + ' breakdown'
+        # 设数据库名称为：今日加breakdown 例如 "2020.12.22 breakdown"
         conn = sqlite3.connect('test.db')
+        cursor = conn.cursor()
+        cursor.execute("select name from sqlite_master where type='table' order by name")
+        table_list = cursor.fetchall()
+        table_list = [j for i in table_list for j in i]
+        if sql_name in table_list:
+            df = pd.read_sql('select * from {}'.format('"' + sql_name + '"'), conn)
+            df = df.iloc[:, 1:]
+        else:
+            df = pd.DataFrame(columns=['index', 'row_num', 'type', 'start_time', 'end_time'])
+        conn.commit()
+        conn.close()
+
         remark_dialog = QDialog()
         lay = QFormLayout(remark_dialog)
         edit1 = QComboBox()
-        edit1.addItems(['设备故障', '混配卸船', '天气因素', '单线作业', '料粘', '机车整备', '其他'])
+        edit1.addItems(['取料机故障','皮带故障','混配卸船', '天气因素', '单线作业', '料粘', '其他'])
         edit2 = QLineEdit()
-        edit2.setPlaceholderText('时间(单位：分钟)')
+        edit2.setPlaceholderText('起始时间')
+        edit4 = QLineEdit()
+        edit4.setPlaceholderText('结束时间')
         edit3 = QTextEdit()
         button1 = QPushButton('确定添加')
         button2 = QPushButton('保存并退出')
 
-        lay.addRow(edit1)
-        lay.addRow(edit2)
-        lay.addRow(edit3)
+        lay.addRow(edit1)#故障类型下拉菜单
+        lay.addRow(edit2)#起始时间
+        lay.addRow(edit4)#结束时间
+        lay.addRow(edit3)#回显lineEdit
         lay.addRow(button1)
         lay.addRow(button2)
 
@@ -158,13 +166,14 @@ class Remarks:
         index_row = model.indexAt(pos).row()
         # index_row：所选的备注按钮的所在行数
 
-        sql_df = Remarks.df[Remarks.df['row_num'] == index_row]
+        sql_df = df[df['row_num'] == index_row]
         sql_text = ''
         for index in range(len(sql_df)):
             single_list = sql_df.iloc[index].tolist()
             single_list_str = list(map(str, single_list))
             # ===single_list_str示例：['1', '4', '设备故障', '12']====
-            single_text = ' '.join(single_list_str[2:]) + '分钟' + '\n'
+            single_list_str.insert(4, '至')
+            single_text = ' '.join(single_list_str[2:]) + '\n'
             sql_text += single_text
         edit3.setText(sql_text)
 
@@ -172,9 +181,13 @@ class Remarks:
 
         def content_show(df):
             #  LineEdit显示函数
-            item_row, breakdown_type, breakdown_time = index_row, edit1.currentText(), str(edit2.text())
+            item_row, breakdown_type, breakdown_start_time, breakdown_end_time = index_row, edit1.currentText(), str(edit2.text()),str(edit4.text())
             print(df)
-            df.loc[df.shape[0] + 1] = [df.shape[0] + 1, item_row, breakdown_type, breakdown_time]
+            if len(breakdown_start_time)== 0 or len(breakdown_end_time) == 0:
+                QMessageBox.critical(remark_dialog,"注意", "请将起始时间和结束时间填写完整", QMessageBox.Ok | QMessageBox.Cancel,QMessageBox.Ok)
+                # 若故障开始时间和结束时间任意一个没填，则不保存到Remark.df中，同时警告对话框
+            else:
+                df.loc[df.shape[0] + 1] = [df.shape[0] + 1, item_row, breakdown_type, breakdown_start_time,breakdown_end_time]
             # index:    ,item_row:索引（从0开始,控件所在的行数）， breakdown_type:故障类型 ， breakdown_time:故障时间
             sql_df = df[df['row_num'] == index_row]
             print(sql_df)
@@ -182,20 +195,28 @@ class Remarks:
             for index in range(len(sql_df)):
                 single_list = sql_df.iloc[index].tolist()
                 single_list_str = list(map(str, single_list))
-                # single_list_str示例：['1', '4', '设备故障', '12']
-                single_text = ' '.join(single_list_str[2:]) + '分钟' + '\n'
+                # single_list_str示例：['1', '4', '设备故障', '12:30','13:00']
+                if single_list_str[-1] == '':
+                    continue
+                # 如果single_list_str最后一个元素是空字符串，即故障时间未填写，则不在下方lineedit显示
+                single_list_str.insert(4,'至')
+                single_text = ' '.join(single_list_str[2:]) + '\n'
                 # single_text 示例：'设备故障 111分钟'
                 sql_text += single_text
             edit3.setText(sql_text)
 
         def content_save(df):
             if len(df) != 0:
-                sql_name = today + ' breakdown'
+                conn = sqlite3.connect('test.db')
+                sql_name = table_time + ' breakdown'
                 df.to_sql(sql_name, conn, if_exists='replace')
+                conn.commit()
+                conn.close()
             remark_dialog.close()
 
-        button1.clicked.connect(lambda: content_show(Remarks.df))
-        button2.clicked.connect(lambda: content_save(Remarks.df))
+
+        button1.clicked.connect(lambda: content_show(df))
+        button2.clicked.connect(lambda: content_save(df))
 
         remark_dialog.exec_()
 
