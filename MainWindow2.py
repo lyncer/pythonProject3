@@ -251,11 +251,16 @@ class Ui_MainWindow(object):
                                                                     "'挂车时间' TEXT,'备注' TEXT," \
                                                                     "PRIMARY KEY('id' AUTOINCREMENT));"
                 cursor.execute(sentence)
+                button = QMessageBox.critical(table_model, "注意", "过表成功，请重新启动程序！",
+                                          QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok)
             else:
                 status_bar.showMessage('已存在{}数据表'.format(tomorrow))
                 Table.read_table(table_model, table_time=tomorrow, status_bar=self.statusbar)
                 self.GroupBox.setCurrentText(tomorrow)
                 # todo 若保存也是保存到tomorrow才行
+            conn.commit()
+            conn.close()
+
 #================================================================================================
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate

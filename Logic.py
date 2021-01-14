@@ -10,7 +10,7 @@ from Sql_connect import Sql
 from DataWash import *
 
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
-              '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件', '挂车时间', '备注']
+              '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件','挂车时间', '线内作业时间分析','待挂时间分析']
 
 Today = datetime.today()
 # 定义today 为“2020.xx.xx”格式的字符串
@@ -50,7 +50,6 @@ class Table:
     @staticmethod
     def read_table(table_model, table_time, status_bar):
         database = Sql.try_connect_sql(table_model)
-        # todo 反写数据至model
         conn = dataset.connect("sqlite:///test.db")
         data_table = conn[table_time]
         database_result = data_table.all().result_proxy
@@ -77,8 +76,28 @@ class Table:
         else:
             QMessageBox.critical(table_model, "注意", "{}无数据".format(table_time), QMessageBox.Ok | QMessageBox.Cancel,
                                  QMessageBox.Ok)
+            # =====抹除当前页面数据的函数=======================
+            value = 0
+            for row_index, row_data in enumerate(list(range(24))):
+                for col_index in list(range(17)):  # 舍去row_data的第一个元素，是个数字
+                    print(col_index,value)
+                    if col_index not in [0, 1, 2]:
+                    # 若列索引不是 0 ，1，2
+                        item = QTableWidgetItem('')
+                        table_model.setItem(row_index, col_index, item)
+                    elif col_index == 0:
+                        work_location = ['实业一期', '实业一期', '实业一期', '实业一期', '实业一期', '实业一期', '实业一期', '实业一期',
+                                     '实业二期', '实业二期', '实业二期', '实业二期', '实业二期', '实业二期', '矿三', '矿三',
+                                     '矿三', '矿三', '矿三', '矿三', '矿三', '矿三', '矿三', '矿三']
+                        item = QTableWidgetItem(work_location[value])
+                        table_model.setItem(row_index, col_index, item)
+                        value += 1
+                    elif col_index == 1 or col_index == 2:
+                        table_model.cellWidget(row_index,col_index).setCurrentIndex(0)
+
+            # =====抹除当前页面数据的函数 ======================
         status_bar.showMessage(table_time)
-        #todo 抹除当前页面数据
+
 
     @staticmethod
     def tem_save(table, table_time):
@@ -106,22 +125,30 @@ class Table:
             row_table.append(row_data)
         table_df = pd.DataFrame(row_table)
         table_df.columns = Head_label
+        #==数据清洗===
         table_df.replace(regex=r'[:/-]', value='.', inplace=True)
         table_df.replace(regex=u'：', value='.', inplace=True)
-        table_df.to_csv('shit.csv')
+
+        # 转化为时间格式
+        time_col_list = ['调妥时间','封堵开始', '封堵结束', '装车开始', '装车完毕','平车开始', '平车结束', '具备挂车条件','挂车时间']
+        for time_col_name in time_col_list:
+            table_df[time_col_name] = pd.to_datetime(table_df[time_col_name],format='%H.%M',errors='ignore')
+
+
+        #==数据清洗===
+        table_df.to_csv('{}.csv'.format(table_time))
         table_df.to_sql(table_time, conn, if_exists='replace')
         try:
             table_df.to_sql(table_time + '_analyse', conn, if_exists='replace')
+            # 存储一个名为 table_time + _analyse 的数据表， 用于远程分析使用
         except:
             pass
-        # 若存在名为today的表，则替换
+
         conn.commit()
         conn.close()
 
 
 class Remarks:
-    # 这是故障类型和时间的列表
-
     def __init__(self):
         pass
 
@@ -152,7 +179,6 @@ class Remarks:
         edit3 = QTextEdit()
         button1 = QPushButton('确定添加')
         button2 = QPushButton('保存并退出')
-
         lay.addRow(edit1)#故障类型下拉菜单
         lay.addRow(edit2)#起始时间
         lay.addRow(edit4)#结束时间
