@@ -36,7 +36,8 @@ class Menubar:
                 quxiang.write(text)
             QMessageBox.critical(MainWindow, "注意", "添加成功，请重新进入", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok)
 
-
+    def Remote_table_from_huodiao(self,MainWindow):
+        pass
 
     @staticmethod
     def yesterday_table(table_model):

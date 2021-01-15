@@ -122,8 +122,9 @@ class Ui_MainWindow(object):
 
         self.edit = self.bar.addMenu('编辑')
         add_station = QAction('添加到站',MainWindow)
+        remote_table_from_huodiao = QAction('远程读表',MainWindow)
         self.edit.addAction(add_station)
-        self.edit.addAction('')
+        self.edit.addAction(remote_table_from_huodiao)
 
         self.view = self.bar.addMenu('视图')
         self.yesterday_table = QAction('前日写实',MainWindow)
@@ -221,6 +222,7 @@ class Ui_MainWindow(object):
         # 信号——槽函数
         self.save_button.clicked.connect(lambda :Table.tem_save(self.model,self.GroupBox.currentText()))
         add_station.triggered.connect(lambda :Menubar.addStation(MainWindow,MainWindow))
+        remote_table_from_huodiao.triggered.connect(None)
         self.GroupBox.currentIndexChanged.connect(self.groupchange)
         Table.init_sql(self)
 
