@@ -29,11 +29,12 @@ class Menubar:
         print('shit')
 
     def addStation(self,MainWindow):
-        dialog = QInputDialog()
-        edit = QLineEdit(dialog)
-        stationName,a = dialog.getText(MainWindow,'对话框','到站名')
-        print(stationName)
-        dialog.exec_()
+        text, okPressed = QInputDialog.getText(self, "添加到站", "请输入要添加的到站名（例如：迁安燕钢）:", QLineEdit.Normal, "")
+        if okPressed and text != '':
+            with open('quxiang.txt', 'a', encoding='utf-8') as quxiang:
+                text = ',' + text
+                quxiang.write(text)
+            QMessageBox.critical(MainWindow, "注意", "添加成功，请重新进入", QMessageBox.Ok | QMessageBox.Cancel, QMessageBox.Ok)
 
 
 

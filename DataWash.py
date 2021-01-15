@@ -6,7 +6,7 @@ import dataset
 import pandas as pd
 import sqlite3
 from PyQt5 import QtCore
-from Sql_connect import Sql
+
 
 
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
@@ -18,7 +18,6 @@ today =  Today.strftime('%Y.%m.%d')
 tomorrow = Today + timedelta(days=1)
 tomorrow = tomorrow.strftime('%Y.%m.%d')
 #=======================================================================================================================
-
 
 
 def time_format(DataFrame):

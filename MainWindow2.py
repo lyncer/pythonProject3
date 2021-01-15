@@ -14,13 +14,15 @@ from datetime import datetime,timedelta
 from MenuBar import Menubar
 import pandas as pd
 import sqlite3
-from PyQt5.Qt import QKeyEvent
+import os
 
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
               '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件','挂车时间', '线内作业时间分析','待挂时间分析']
 
-quxiang_list = '无 古冶国义 首钢沙河驿 鑫达沙河驿 九江沙河驿 荣信沙河驿 松汀沙河驿 东华胥各庄 ' \
-                           '瑞丰胥各庄 燕钢迁安 津西贾庵子 唐山东海雷庄 古冶经安 河北东海古冶 河北东海雷庄 河钢唐南 港陆团瓢庄'.split()
+with open('quxiang.txt','r',encoding='utf-8') as quxiang:
+    quxiang_list = quxiang.read().split(',')
+    quxiang_list = [quxiang_name.strip() for quxiang_name in quxiang_list ]
+
 
 Today = datetime.today()
 # 定义today 为“2020.xx.xx”格式的字符串
