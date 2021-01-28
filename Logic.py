@@ -48,9 +48,9 @@ class Table:
             pass
 
     @staticmethod
-    def read_table(table_model, table_time, status_bar):
+    def read_table(table_model, table_time, status_bar,sql_address="sqlite:///test.db",Groupbox=None):
         database = Sql.try_connect_sql(table_model)
-        conn = dataset.connect("sqlite:///test.db")
+        conn = dataset.connect(sql_address)
         data_table = conn[table_time]
         database_result = data_table.all().result_proxy
         if database_result.fetchall():
@@ -97,13 +97,13 @@ class Table:
 
             # =====抹除当前页面数据的函数 ======================
         status_bar.showMessage(table_time)
+        if Groupbox:
+            # 如果传入了Groupbox参数 则修改其currentText
+            Groupbox.setCurrentText(table_time)
 
 
     @staticmethod
-    def tem_save(table, table_time):
-        # 定义保存按钮的函数：当点击保存时，连接数据库，将表格内容写入数据库
-        conn = sqlite3.connect('test.db')
-        # 注意路径格式
+    def table_to_df(table,table_time):
         table_df = pd.DataFrame()
         row_table = []
         for row_num in range(24):
@@ -125,37 +125,45 @@ class Table:
             row_table.append(row_data)
         table_df = pd.DataFrame(row_table)
         table_df.columns = Head_label
-        #==数据清洗===
-        table_df.replace(regex=r'[:/-]', value='.', inplace=True)
-        table_df.replace(regex=u'：', value='.', inplace=True)
-
+        # ==数据清洗===
+        table_df.replace(regex=r'\.', value=':', inplace=True)
+        table_df.replace(regex=u'：', value=':', inplace=True)
         # 转化为时间格式
-        time_col_list = ['调妥时间','封堵开始', '封堵结束', '装车开始', '装车完毕','平车开始', '平车结束', '具备挂车条件','挂车时间']
+        time_col_list = ['调妥时间', '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件', '挂车时间']
         for time_col_name in time_col_list:
-            table_df[time_col_name] = pd.to_datetime(table_df[time_col_name],format='%H.%M',errors='ignore')
+            table_df[time_col_name] = pd.to_datetime(table_df[time_col_name], format='%H:%M', errors='ignore')
 
+        return table_df
+        # ==数据清洗===
 
-        #==数据清洗===
-        table_df.to_csv('{}.csv'.format(table_time))
+    @staticmethod
+    def tem_save(table_df,table_time,sql_address='test.db'):
+        # 定义保存按钮的函数：当点击保存时，连接数据库，将表格内容写入数据库
+        table_df = Table.table_to_df(table_df,table_time)
+        conn = sqlite3.connect(sql_address)
+        # 注意路径格式
         table_df.to_sql(table_time, conn, if_exists='replace')
         try:
-            table_df.to_sql(table_time + '_analyse', conn, if_exists='replace')
-            # 存储一个名为 table_time + _analyse 的数据表， 用于远程分析使用
+            remote_conn = sqlite3.connect('remote.db')
+            table_df.to_sql(table_time, remote_conn, if_exists='replace')
         except:
             pass
+        finally:
+            remote_conn.commit()
+            remote_conn.close()
+            # 存储一个名为 table_time + _analyse 的数据表， 用于远程分析使用
 
-        conn.commit()
-        conn.close()
 
 
 class Remarks:
     def __init__(self):
         pass
 
-    def show_dialog(self, remark_button, model,table_time):
+    def show_dialog(self, remark_button, model,table_time,conn_name = 'test.db'):
         sql_name = table_time + ' breakdown'
+        print(remark_button.sender().objectName())
         # 设数据库名称为：今日加breakdown 例如 "2020.12.22 breakdown"
-        conn = sqlite3.connect('test.db')
+        conn = sqlite3.connect(conn_name)
         cursor = conn.cursor()
         cursor.execute("select name from sqlite_master where type='table' order by name")
         table_list = cursor.fetchall()
@@ -238,6 +246,14 @@ class Remarks:
                 df.to_sql(sql_name, conn, if_exists='replace')
                 conn.commit()
                 conn.close()
+            try:
+                remote_conn = sqlite3.connect('remote.db')
+                sql_name = table_time + ' breakdown'
+                df.to_sql(sql_name, remote_conn, if_exists='replace')
+                remote_conn.commit()
+                remote_conn.close()
+            except:
+                pass
             remark_dialog.close()
 
 

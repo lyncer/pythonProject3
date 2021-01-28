@@ -15,6 +15,7 @@ from MenuBar import Menubar
 import pandas as pd
 import sqlite3
 import os
+import DataWash
 
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
               '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件','挂车时间', '线内作业时间分析','待挂时间分析']
@@ -129,11 +130,20 @@ class Ui_MainWindow(object):
         self.view = self.bar.addMenu('视图')
         self.yesterday_table = QAction('前日写实',MainWindow)
         self.today_table = QAction('当日写实',MainWindow)
+        self.table_analyse = QAction('导出为写实分析',MainWindow)
+        self.analyse = QAction('生成分析表格', MainWindow)
+        self.report_docx = QAction('生成写实word', MainWindow)
         self.view.addAction(self.yesterday_table)
         self.view.addAction(self.today_table)
-        self.yesterday_table.triggered.connect(lambda :Menubar.yesterday_table(self.model))
-        self.today_table.triggered.connect(lambda: Menubar.today_table(self.model))
-        self.input_model.clicked.connect(lambda :Menubar.test(self.model))
+        self.view.addAction(self.table_analyse)
+        self.view.addAction(self.analyse)
+        self.view.addAction(self.report_docx)
+        self.yesterday_table.triggered.connect(lambda :Menubar.yesterday_table(self.model,self.statusbar))
+        self.today_table.triggered.connect(lambda: Menubar.today_table(self.model,today,self.statusbar,self.GroupBox))
+        self.table_analyse.triggered.connect(lambda :Menubar.Table_analyse(self.model,self.GroupBox.currentText(),self.statusbar))
+        self.report_docx.triggered.connect(lambda :DataWash.Report_docx(self.model,self.GroupBox.currentText()).wash_use_table())
+        self.analyse.triggered.connect(lambda :DataWash.table_analyse(self.model,self.GroupBox.currentText()))
+        self.input_model.clicked.connect(lambda :DataWash.Report_docx(self.model,self.GroupBox.currentText()).init_docx())
         self.save.triggered.connect(lambda :self.passtable(self.statusbar,self.model))
 
 
@@ -174,13 +184,19 @@ class Ui_MainWindow(object):
             self.model.setCellWidget(num, 2, reborn_combox3())
 
         def bulid_remark_button():
-            self.remark_button = QPushButton('添加备注')
-            self.remark_button.clicked.connect(lambda :Remarks.show_dialog(self.remark_button,self.remark_button,self.model,self.GroupBox.currentText()))
-            return self.remark_button
-
+            count = -1
+            def inner_bulid_remark_button():
+                nonlocal count
+                count += 1
+                self.remark_button = QPushButton('添加备注')
+                self.remark_button.setObjectName(str(count))
+                print(self.remark_button.objectName())
+                self.remark_button.clicked.connect(lambda :Remarks.show_dialog(self.remark_button,self.remark_button,self.model,self.GroupBox.currentText()))
+                return self.remark_button
+            return inner_bulid_remark_button
+        Bulid_remark_button = bulid_remark_button()
         for num in range(0,24):
-            self.model.setCellWidget(num, 15, bulid_remark_button())
-
+            self.model.setCellWidget(num, 17, Bulid_remark_button()) #设置备注按钮的位置 第17列（隐藏列）
         # =============数据库内列表加入多选栏=======================
         def table_list_for_combox(test_all_tables=Table.test_all_tables, time_format='%Y.%m.%d'):
             table_name_list = []
@@ -222,7 +238,7 @@ class Ui_MainWindow(object):
         # 信号——槽函数
         self.save_button.clicked.connect(lambda :Table.tem_save(self.model,self.GroupBox.currentText()))
         add_station.triggered.connect(lambda :Menubar.addStation(MainWindow,MainWindow))
-        remote_table_from_huodiao.triggered.connect(None)
+        remote_table_from_huodiao.triggered.connect(lambda :Menubar.Win_Remote_table_from_huodiao(MainWindow,MainWindow,self.model,self.statusbar,self.GroupBox))
         self.GroupBox.currentIndexChanged.connect(self.groupchange)
         Table.init_sql(self)
 
@@ -265,7 +281,8 @@ class Ui_MainWindow(object):
             conn.commit()
             conn.close()
 
-#================================================================================================
+
+    #================================================================================================
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
@@ -282,6 +299,7 @@ class Ui_MainWindow(object):
         self.AggBox.setItemText(3, _translate("MainWindow", "用时极值"))
         self.over_time.setText(_translate("MainWindow", "超时"))
         self.GroupBox.setCurrentIndex(1)
+
 
 
 

@@ -25,3 +25,15 @@ class Sql:
         return database
 
 
+def bulid_remark_button():
+    count = 0
+    def inner_bulid_remark_button():
+        nonlocal count
+        count += 1
+        remark_button = count
+        return remark_button
+    print(count)
+    return inner_bulid_remark_button
+
+f = bulid_remark_button()
+f()
