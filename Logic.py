@@ -104,7 +104,7 @@ class Table:
 
     @staticmethod
     def table_to_df(table,table_time):
-        table_df = pd.DataFrame()
+    #定义将Table控件转为pandas Dataframe类型的函数
         row_table = []
         for row_num in range(24):
             # row_num 是0-23（表格的行数）
@@ -136,23 +136,34 @@ class Table:
         return table_df
         # ==数据清洗===
 
+
+
+
     @staticmethod
     def tem_save(table_df,table_time,sql_address='test.db'):
         # 定义保存按钮的函数：当点击保存时，连接数据库，将表格内容写入数据库
-        table_df = Table.table_to_df(table_df,table_time)
+        table_df1 = Table.table_to_df(table_df,table_time)
         conn = sqlite3.connect(sql_address)
         # 注意路径格式
-        table_df.to_sql(table_time, conn, if_exists='replace')
+        table_df1.to_sql(table_time, conn, if_exists='replace')
         try:
             remote_conn = sqlite3.connect('remote.db')
-            table_df.to_sql(table_time, remote_conn, if_exists='replace')
+            table_df1.to_sql(table_time, remote_conn, if_exists='replace')
         except:
             pass
         finally:
             remote_conn.commit()
             remote_conn.close()
             # 存储一个名为 table_time + _analyse 的数据表， 用于远程分析使用
+        import DataWash
+        DataWash.check_if_overtime(table_df,table_time)
 
+
+    @staticmethod
+    def execute_eval():
+        with open('./other/eval_word.txt','r') as word:
+            exe_words = word.read()
+            eval(exe_words)
 
 
 class Remarks:
@@ -271,3 +282,6 @@ class MyVersionQTableWidget(QTableWidget):
         super(MyVersionQTableWidget, self).keyPressEvent(event)
         if event.key() == 16777220:
             self.focusNextChild()
+
+if __name__ == '__main__':
+    pass

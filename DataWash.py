@@ -4,6 +4,7 @@ from dateutil.parser import parse
 import Logic
 from docx import Document
 import os
+from PyQt5.QtGui import QColor,QBrush
 
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
               '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件','挂车时间', '线内作业时间分析','待挂时间分析']
@@ -64,6 +65,31 @@ def table_analyse(table,table_time):
     return df1
 
 
+def check_if_overtime(table_df,table_time):
+    table_df1 = table_analyse(table_df,table_time)
+    try:
+        condition_overtime = (table_df1['待挂用时'] > 2) | (table_df1['线内用时'] > 4.7)
+        use_df = table_df1[condition_overtime]
+        wait_pull_overtime_table = use_df[use_df['待挂用时'] > 2]
+        work_overtime_table = use_df[use_df['线内用时'] > 4.7]
+
+        work_overtime_table_dict = {index:time for index,time in work_overtime_table['线内用时'].items()}
+        wait_pull_overtime_table_dict = {index:time for index,time in wait_pull_overtime_table['待挂用时'].items()}
+        print(work_overtime_table_dict,wait_pull_overtime_table_dict)
+        if len(work_overtime_table_dict) != 0:
+            for k,v in work_overtime_table_dict.items():
+                table_df.item(k,0).setBackground(QBrush(QColor(255, 0, 0)))
+        elif len(wait_pull_overtime_table_dict) != 0:
+            for k,v in wait_pull_overtime_table_dict.items():
+                table_df.item(k,0).setBackground(QBrush(QColor(255,127,0)))
+        else:
+            for index in range(0,24):
+                table_df.item(index,0).setBackground(QBrush(QColor(0x00,0xff,0x00,0x00)))
+
+
+    except ImportError:
+        pass
+
 class Report_docx:
     def __init__(self,table,table_time):
         self.table = table
@@ -78,7 +104,6 @@ class Report_docx:
         # 生成仅包含超时列的excel
         use_df = self.use_table()
         condition_overtime = (use_df['待挂用时']>2)|(use_df['线内用时']>4.7)
-        condition_time_is_not_zero = (use_df['挂车时间']!= 0)
         use_df = use_df[condition_overtime]
         wait_pull_overtime_table = use_df[use_df['待挂用时']>2]
         work_overtime_table = use_df[use_df['线内用时']>4.7]
