@@ -1,5 +1,4 @@
 from datetime import datetime,timedelta
-import pandas as pd
 from dateutil.parser import parse
 import Logic
 from docx import Document
@@ -82,7 +81,7 @@ def check_if_overtime(table_df,table_time):
             for k,v in work_overtime_table_dict.items():
                 table_df.item(k,0).setBackground(QBrush(QColor(255, 0, 0)))
                 the_cell_with_background_color_index.append(k)
-        elif len(wait_pull_overtime_table_dict) != 0:
+        if len(wait_pull_overtime_table_dict) != 0:
             for k,v in wait_pull_overtime_table_dict.items():
                 table_df.item(k,0).setBackground(QBrush(QColor(255,127,0)))
                 the_cell_with_background_color_index.append(k)
