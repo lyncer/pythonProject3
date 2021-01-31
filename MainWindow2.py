@@ -38,7 +38,7 @@ class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("曹妃甸南货调写实系统")
-        MainWindow.resize(1624, 838)
+        MainWindow.resize(1624, 938)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
