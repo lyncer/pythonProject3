@@ -44,14 +44,14 @@ def table_analyse(table,table_time):
     def series_round(single_cell):
         return round(single_cell,2)
 
-    for i in range(24):
+    for i in range(26):
         try:
             df1.loc[i, '线内用时'] = (df1.loc[i, '具备挂车条件'] - df1.loc[i, '调妥时间'])/timedelta(minutes=60)
             df1['线内用时'] = df1['线内用时'].apply(series_round)
             df1['线内用时'] = df1['线内用时'].apply(time_lessthan_zero)
         except TypeError:
             df1.loc[i, '线内用时'] = 0
-    for i in range(24):
+    for i in range(26):
         try:
             time = (df1.loc[i, '挂车时间'] - df1.loc[i, '具备挂车条件'])/timedelta(minutes=60)
             df1.loc[i, '待挂用时'] = time
@@ -66,6 +66,7 @@ def table_analyse(table,table_time):
 
 
 def check_if_overtime(table_df,table_time):
+    #检查是否作业超时
     table_df1 = table_analyse(table_df,table_time)
     try:
         condition_overtime = (table_df1['待挂用时'] > 2) | (table_df1['线内用时'] > 4.7)
@@ -76,17 +77,20 @@ def check_if_overtime(table_df,table_time):
         work_overtime_table_dict = {index:time for index,time in work_overtime_table['线内用时'].items()}
         wait_pull_overtime_table_dict = {index:time for index,time in wait_pull_overtime_table['待挂用时'].items()}
         print(work_overtime_table_dict,wait_pull_overtime_table_dict)
+        the_cell_with_background_color_index = []
         if len(work_overtime_table_dict) != 0:
             for k,v in work_overtime_table_dict.items():
                 table_df.item(k,0).setBackground(QBrush(QColor(255, 0, 0)))
+                the_cell_with_background_color_index.append(k)
         elif len(wait_pull_overtime_table_dict) != 0:
             for k,v in wait_pull_overtime_table_dict.items():
                 table_df.item(k,0).setBackground(QBrush(QColor(255,127,0)))
-        else:
-            for index in range(0,24):
+                the_cell_with_background_color_index.append(k)
+        for index in range(0,26):
+            if index not in the_cell_with_background_color_index:
                 table_df.item(index,0).setBackground(QBrush(QColor(0x00,0xff,0x00,0x00)))
-
-
+            else:
+                pass
     except ImportError:
         pass
 

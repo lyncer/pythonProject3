@@ -12,11 +12,7 @@ from Logic import Table,Remarks,MyVersionQTableWidget
 from PyQt5.QtWidgets import *
 from datetime import datetime,timedelta
 from MenuBar import Menubar
-from PyQt5.QtGui import QBrush,QColor
-
-import pandas as pd
 import sqlite3
-import os
 import DataWash
 
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
@@ -42,10 +38,10 @@ class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("曹妃甸南货调写实系统")
-
         MainWindow.resize(1024, 638)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+        self.grid = QtWidgets.QGridLayout(MainWindow)
         self.horizontalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(0, 0, 228, 51))
         self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
@@ -97,6 +93,7 @@ class Ui_MainWindow(object):
         self.output_line.setGeometry(QtCore.QRect(230, 10, 321, 31))
         self.output_line.setObjectName("output_line")
         MainWindow.setCentralWidget(self.centralwidget)
+
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1024, 22))
         self.menubar.setObjectName("menubar")
@@ -109,7 +106,7 @@ class Ui_MainWindow(object):
         self.model = MyVersionQTableWidget()
         # self.model.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
 
-        self.model.setRowCount(24)
+        self.model.setRowCount(26)
         self.model.setColumnCount(17)
         self.model.setHorizontalHeaderLabels(Head_label)
 
@@ -176,13 +173,14 @@ class Ui_MainWindow(object):
         for num in range(8):
             self.model.setItem(num, 0, QTableWidgetItem('实业一期'))
             self.model.setCellWidget(num, 1, reborn_combox())
-        for num in range(8, 14):
+        for num in range(8, 17):
             self.model.setCellWidget(num, 1, reborn_combox1())
             self.model.setItem(num, 0, QTableWidgetItem('实业二期'))
-        for num in range(14, 24):
+            print(self.model.item(num,0))
+        for num in range(17, 26):
             self.model.setItem(num, 0, QTableWidgetItem('矿三'))
             self.model.setCellWidget(num, 1, reborn_combox2())
-        for num in range(24):
+        for num in range(26):
             self.model.setCellWidget(num, 2, reborn_combox3())
 
         def bulid_remark_button():
@@ -197,7 +195,7 @@ class Ui_MainWindow(object):
                 return self.remark_button
             return inner_bulid_remark_button
         Bulid_remark_button = bulid_remark_button()
-        for num in range(0,24):
+        for num in range(0,26):
             self.model.setCellWidget(num, 17, Bulid_remark_button()) #设置备注按钮的位置 第17列（隐藏列）
         # =============数据库内列表加入多选栏=======================
         def table_list_for_combox(test_all_tables=Table.test_all_tables, time_format='%Y.%m.%d'):
