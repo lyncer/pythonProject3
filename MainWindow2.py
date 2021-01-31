@@ -38,10 +38,11 @@ class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("曹妃甸南货调写实系统")
-        MainWindow.resize(1024, 638)
+        MainWindow.resize(1624, 838)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.grid = QtWidgets.QGridLayout(MainWindow)
+        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
+        self.gridLayout.setObjectName("gridLayout")
         self.horizontalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(0, 0, 228, 51))
         self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
@@ -58,7 +59,7 @@ class Ui_MainWindow(object):
         self.input_model.setObjectName("save_button")
         self.horizontalLayout.addWidget(self.save_button)
         self.tableView = QtWidgets.QTableView(self.centralwidget)
-        self.tableView.setGeometry(QtCore.QRect(0, 90, 1021, 501))
+        self.tableView.setGeometry(QtCore.QRect(0, 90, 1621, 801))
         self.tableView.setObjectName("tableView")
         self.GroupBox = QtWidgets.QComboBox(self.centralwidget)
         self.GroupBox.setGeometry(QtCore.QRect(840, 10, 121, 26))
@@ -109,6 +110,7 @@ class Ui_MainWindow(object):
         self.model.setRowCount(26)
         self.model.setColumnCount(17)
         self.model.setHorizontalHeaderLabels(Head_label)
+        #self.model.horizontalHeader().setSectionResizeMode(1)
 
         # 引入菜单栏
         self.bar = MainWindow.menuBar()
