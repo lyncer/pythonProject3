@@ -161,10 +161,13 @@ class Table:
 
     @staticmethod
     def execute_eval():
-        with open('./other/eval_word.txt','r') as word:
-            exe_words = word.read()
-            eval(exe_words)
-
+        try:
+            with open('./other/eval_word.txt','r') as word:
+                exe_words = word.read()
+                eval(exe_words)
+        except:
+            print(u'execute_eval函数出现错误')
+            pass
 
 class Remarks:
     def __init__(self):
