@@ -105,6 +105,7 @@ class Ui_MainWindow(object):
 
 
         self.model = MyVersionQTableWidget()
+        self.model.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
         # self.model.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode(1))
 
         self.model.setRowCount(26)
