@@ -78,17 +78,16 @@ class Table:
                                  QMessageBox.Ok)
             # =====抹除当前页面数据的函数=======================
             value = 0
-            for row_index, row_data in enumerate(list(range(24))):
+            for row_index, row_data in enumerate(list(range(26))):
                 for col_index in list(range(17)):  # 舍去row_data的第一个元素，是个数字
-                    print(col_index,value)
                     if col_index not in [0, 1, 2]:
                     # 若列索引不是 0 ，1，2
                         item = QTableWidgetItem('')
                         table_model.setItem(row_index, col_index, item)
                     elif col_index == 0:
                         work_location = ['实业一期', '实业一期', '实业一期', '实业一期', '实业一期', '实业一期', '实业一期', '实业一期',
-                                     '实业二期', '实业二期', '实业二期', '实业二期', '实业二期', '实业二期', '矿三', '矿三',
-                                     '矿三', '矿三', '矿三', '矿三', '矿三', '矿三', '矿三', '矿三']
+                                     '实业二期', '实业二期', '实业二期', '实业二期', '实业二期', '实业二期','实业二期','实业二期', '实业二期','矿三', '矿三',
+                                     '矿三', '矿三', '矿三', '矿三', '矿三', '矿三', '矿三']
                         item = QTableWidgetItem(work_location[value])
                         table_model.setItem(row_index, col_index, item)
                         value += 1
@@ -106,7 +105,7 @@ class Table:
     def table_to_df(table,table_time):
     #定义将Table控件转为pandas Dataframe类型的函数
         row_table = []
-        for row_num in range(24):
+        for row_num in range(26):
             # row_num 是0-23（表格的行数）
             row_data = []
             for col_num, col_name in enumerate(Head_label):
@@ -132,9 +131,7 @@ class Table:
         time_col_list = ['调妥时间', '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件', '挂车时间']
         for time_col_name in time_col_list:
             table_df[time_col_name] = pd.to_datetime(table_df[time_col_name], format='%H:%M', errors='ignore')
-
         return table_df
-        # ==数据清洗===
 
 
 
@@ -146,6 +143,10 @@ class Table:
         conn = sqlite3.connect(sql_address)
         # 注意路径格式
         table_df1.to_sql(table_time, conn, if_exists='replace')
+        if not os.path.exists('./写实存档'):
+            os.makedirs('./写实存档')
+        table_df1.to_csv('./写实存档/{}.csv'.format(table_time))
+        #点按保存按钮时将写实存档为csv文件
         try:
             remote_conn = sqlite3.connect('remote.db')
             table_df1.to_sql(table_time, remote_conn, if_exists='replace')
@@ -175,7 +176,6 @@ class Remarks:
 
     def show_dialog(self, remark_button, model,table_time,conn_name = 'test.db'):
         sql_name = table_time + ' breakdown'
-        print(remark_button.sender().objectName())
         # 设数据库名称为：今日加breakdown 例如 "2020.12.22 breakdown"
         conn = sqlite3.connect(conn_name)
         cursor = conn.cursor()
@@ -230,7 +230,6 @@ class Remarks:
         def content_show(df):
             #  LineEdit显示函数
             item_row, breakdown_type, breakdown_start_time, breakdown_end_time = index_row, edit1.currentText(), str(edit2.text()),str(edit4.text())
-            print(df)
             if len(breakdown_start_time)== 0 or len(breakdown_end_time) == 0:
                 QMessageBox.critical(remark_dialog,"注意", "请将起始时间和结束时间填写完整", QMessageBox.Ok | QMessageBox.Cancel,QMessageBox.Ok)
                 # 若故障开始时间和结束时间任意一个没填，则不保存到Remark.df中，同时警告对话框
@@ -238,7 +237,6 @@ class Remarks:
                 df.loc[df.shape[0] + 1] = [df.shape[0] + 1, item_row, breakdown_type, breakdown_start_time,breakdown_end_time]
             # index:    ,item_row:索引（从0开始,控件所在的行数）， breakdown_type:故障类型 ， breakdown_time:故障时间
             sql_df = df[df['row_num'] == index_row]
-            print(sql_df)
             sql_text = ''
             for index in range(len(sql_df)):
                 single_list = sql_df.iloc[index].tolist()
@@ -283,8 +281,11 @@ class MyVersionQTableWidget(QTableWidget):
 
     def keyPressEvent(self, event):
         super(MyVersionQTableWidget, self).keyPressEvent(event)
-        if event.key() == 16777220:
+        if event.key() == 16777220 or event.key() == 16777221:
             self.focusNextChild()
+        print(str(event.key()))
+
+
 
 if __name__ == '__main__':
     pass

@@ -1,11 +1,6 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtSql import QSqlDatabase, QSqlTableModel, QSqlQuery
-from datetime import datetime
-import dataset
-import pandas as pd
-import sqlite3
-from PyQt5 import QtCore
 
 
 class Sql:
