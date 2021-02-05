@@ -58,43 +58,8 @@ def table_analyse(table,table_time):
             df1['待挂用时'] = df1['待挂用时'].apply(time_lessthan_zero)
         except TypeError:
             df1.loc[i, '待挂用时'] = 0
-#==================调整各个时间列的格式从 ‘xxxx-xx-xx xx:xx’ 至 ‘xx：xx’
-    for time_col_name in time_col_list:
-        df1[time_col_name] = df1[time_col_name].fillna('')
-        df1[time_col_name] = df1[time_col_name].astype('str')
-        df1[time_col_name] = '{} '.format(table_time) + df1[time_col_name]
-        df1[time_col_name] = df1[time_col_name].replace('{} '.format(table_time), '')
-        for i, v in df1[time_col_name].items():
-            try:
-                time_time = parse(v)
-                time_str = datetime.strftime(time_time,'%H:%M')
-                df1.loc[i, time_col_name] = time_str
-            except:
-                pass
-
-    #=======小时数转为 xx小时xx分钟的函数===
-    def transform_time(hours):# 例如5.5
-        # 得到总秒数
-        seconds = hours * 3600
-        m, s = divmod(seconds, 60)
-        h, m = divmod(m, 60)
-        time = "%d小时%02d分钟%02d秒" % (h, m, s)
-        return seconds
-
-        the_column_need_transform_to_hour_minute = ['线内用时','待挂用时']
-        for column_name in the_column_need_transform_to_hour_minute:
-            try:
-                df1[column_name] = 0
-            except ImportError:
-                continue
 
     df1 = df1.iloc[:,1:]
-    try:
-        df1.to_excel('{}分析表.xlsx'.format(table_time))
-    except PermissionError:
-        remark_dialog = QDialog()
-        QMessageBox.critical(remark_dialog, "注意", "请先关闭已打开的分析表", QMessageBox.Ok | QMessageBox.Cancel,
-                             QMessageBox.Ok)
     return df1
 
 
@@ -145,7 +110,6 @@ class Report_docx:
         work_overtime_table = use_df[use_df['线内用时']>4.7]
         if not os.path.exists(self.path):
             os.makedirs('./表格')
-        use_df.to_excel('./表格/haha.xlsx')
 
 
         document = Document()

@@ -3,6 +3,7 @@ from datetime import datetime,timedelta
 import Logic
 import sqlite3
 import os
+from dateutil.parser import parse
 
 
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
@@ -101,7 +102,33 @@ class Menubar:
 
         import DataWash
         final_df = DataWash.table_analyse(table_model,table_time)
-        print(final_df.dtypes)
+        # ==================调整各个时间列的格式从 ‘xxxx-xx-xx xx:xx’ 至 ‘xx：xx’
+        time_col_list = ['调妥时间', '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件', '挂车时间']
+        time_caculate_col_list = ['线内用时','待挂用时']
+        for time_col_name in time_col_list:
+            final_df[time_col_name] = final_df[time_col_name].fillna('')
+            final_df[time_col_name] = final_df[time_col_name].astype('str')
+            final_df[time_col_name] = '{} '.format(table_time) + final_df[time_col_name]
+            final_df[time_col_name] = final_df[time_col_name].replace('{} '.format(table_time), '')
+            for i, v in final_df[time_col_name].items():
+                try:
+                    time_time = parse(v)
+                    time_str = datetime.strftime(time_time, '%H:%M')
+                    final_df.loc[i, time_col_name] = time_str
+                except:
+                    pass
+
+        def time_trans(hours:float): # hours是4.5这样的浮点数
+            if not hours == 0:
+                float_time = hours  # in minutes
+                hours, seconds = divmod(float_time * 3600, 3600)  # split to hours and seconds
+                minutes, seconds = divmod(seconds, 60)  # split the seconds to minutes and seconds
+                hours,minutes,seconds = list(map(int,[hours,minutes,seconds]))
+                return '{}小时{}分钟'.format(hours,minutes)
+        for time_col_name in time_caculate_col_list:
+            final_df[time_col_name] = final_df[time_col_name].apply(time_trans)
+
+
         file_save_path = openFile(table_model) + '/{}.xlsx'.format(table_time)
         try:
             final_df.to_excel(file_save_path)
@@ -111,15 +138,4 @@ class Menubar:
             QMessageBox.critical(remark_dialog, "注意", "请先关闭已打开的分析表", QMessageBox.Ok | QMessageBox.Cancel,
                                  QMessageBox.Ok)
 
-
-
-    @staticmethod
-    def add_row(table_model):
-        pass
-
-
-    @staticmethod
-    def test(table_model):
-        item = [table_model.currentColumn(),table_model]
-        print(table_model.column(item))
 
