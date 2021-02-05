@@ -1,5 +1,6 @@
 import sys
 from PyQt5.QtWidgets import *
+from PyQt5.Qt import QEvent
 from PyQt5.QtSql import QSqlDatabase, QSqlTableModel, QSqlQuery
 from datetime import datetime, timedelta
 import dataset
@@ -145,17 +146,22 @@ class Table:
         table_df1.to_sql(table_time, conn, if_exists='replace')
         if not os.path.exists('./写实存档'):
             os.makedirs('./写实存档')
-        table_df1.to_csv('./写实存档/{}.csv'.format(table_time))
+        try:
+            table_df1.to_csv('./写实存档/{}.csv'.format(table_time))
+        except PermissionError:
+            remark_dialog = QDialog()
+            QMessageBox.critical(remark_dialog, "注意", "请先关闭已打开的{}写实".format(table_time), QMessageBox.Ok | QMessageBox.Cancel,
+                                 QMessageBox.Ok)
         #点按保存按钮时将写实存档为csv文件
         try:
             remote_conn = sqlite3.connect('remote.db')
             table_df1.to_sql(table_time, remote_conn, if_exists='replace')
-        except:
-            pass
-        finally:
             remote_conn.commit()
             remote_conn.close()
-            # 存储一个名为 table_time + _analyse 的数据表， 用于远程分析使用
+        except:
+            print('{}analyse did not save into remote.db successfully'.format(table_time))
+            pass
+            # 存储一个名为 table_time + _analyse 的数据表到remote.db里， 用于远程分析使用
         import DataWash
         DataWash.check_if_overtime(table_df,table_time)
 
@@ -283,8 +289,6 @@ class MyVersionQTableWidget(QTableWidget):
         super(MyVersionQTableWidget, self).keyPressEvent(event)
         if event.key() == 16777220 or event.key() == 16777221:
             self.focusNextChild()
-        print(str(event.key()))
-
 
 
 if __name__ == '__main__':
