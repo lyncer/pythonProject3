@@ -3,7 +3,13 @@ from datetime import datetime,timedelta
 import Logic
 import sqlite3
 import os
+import json
+
 from dateutil.parser import parse
+
+with open('other/global_var.txt','r') as global_var:
+    print(global_var.read())
+
 
 
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
