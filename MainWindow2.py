@@ -38,7 +38,7 @@ class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("曹妃甸南货调写实系统")
-        MainWindow.resize(1424, 938)
+        MainWindow.resize(1424, 858)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -59,7 +59,7 @@ class Ui_MainWindow(object):
         self.input_model.setObjectName("save_button")
         self.horizontalLayout.addWidget(self.save_button)
         self.tableView = QtWidgets.QTableView(self.centralwidget)
-        self.tableView.setGeometry(QtCore.QRect(0, 85, 1821, 801))
+        self.tableView.setGeometry(QtCore.QRect(0, 85, 1821, 701))
         self.tableView.setObjectName("tableView")
         self.GroupBox = QtWidgets.QComboBox(self.centralwidget)
         self.GroupBox.setGeometry(QtCore.QRect(840, 10, 121, 26))

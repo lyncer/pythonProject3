@@ -3,12 +3,7 @@ from datetime import datetime,timedelta
 import Logic
 import sqlite3
 import os
-import json
-
 from dateutil.parser import parse
-
-with open('other/global_var.txt','r') as global_var:
-    print(global_var.read())
 
 
 

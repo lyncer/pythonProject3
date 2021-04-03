@@ -1,14 +1,11 @@
-import sys
 from PyQt5.QtWidgets import *
-from PyQt5.Qt import QEvent
-from PyQt5.QtSql import QSqlDatabase, QSqlTableModel, QSqlQuery
-from datetime import datetime, timedelta
 import dataset
+import os
 import pandas as pd
 import sqlite3
 from PyQt5 import QtCore
 from Sql_connect import Sql
-from DataWash import *
+from datetime import datetime,timedelta
 
 Head_label = ['装车地点', '作业线路', '装车去向', '配空车次', '配空车数', '实装重车', '调妥时间',
               '封堵开始', '封堵结束', '装车开始', '装车完毕', '平车开始', '平车结束', '具备挂车条件','挂车时间', '线内作业时间分析','待挂时间分析']
@@ -42,9 +39,13 @@ class Table:
             sentence = "CREATE TABLE " + "'" + today + "'" + " ('id' INTEGER,'装车地点' TEXT, '作业线路' TEXT,'装车去向' TEXT,'配空车次' TEXT,'配空车数' TEXT,'实装重车' TEXT,'调妥时间' TEXT,'封堵开始' TEXT,'封堵结束' TEXT,'装车开始' TEXT,'装车完毕' TEXT,'平车开始' TEXT,'平车结束' TEXT,'挂车时间' TEXT,'备注' TEXT,PRIMARY KEY('id' AUTOINCREMENT));"
             conn = sqlite3.connect('test.db')
             cursor = conn.cursor()
-            cursor.execute(sentence)
-            conn.commit()
-            conn.close()
+            try:
+                cursor.execute(sentence)
+            except sqlite3.OperationalError:
+                print('sqlite3.OperationalError:%s 已经存在'%today)
+            finally:
+                conn.commit()
+                conn.close()
         else:
             pass
 
