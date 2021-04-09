@@ -4,10 +4,10 @@ block_cipher = None
 
 
 a = Analysis(['MainWindow2.py'],
-             pathex=['C:\\Users\\Administrator\\SHIT'],
+             pathex=['C:\\Users\\Administrator\\pythonProject3'],
              binaries=[],
              datas=[],
-             hiddenimports=[],
+             hiddenimports=['sqlalchemy.sql.default_comparator'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -26,7 +26,7 @@ exe = EXE(pyz,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=False )
+          console=True )
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
